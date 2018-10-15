@@ -1,30 +1,58 @@
 #include "audio.h"
 #include "task.h"
 
+/* Pin assignment guide
+    D 0   Serial
+    D 1   Serial
+    D 2   Audio shield (DAC)
+    D 3   Audio shield (DAC)
+    D 4   Audio shield (DAC)
+    D 5   Audio shield (DAC)
+    D 6~  Output: headlights and side lights
+    D 7   Output: stepper enable
+    D 8   Output: flashing lights
+    D 9   Input: snorkel limit
+    D10   Audio shield (SD)
+    D11   Audio shield (SD)
+    D12   Audio shield (SD)
+    D13   Audio shield (SD)
+
+    A 0   Input:  headlights
+    A 1   Input:  trick or treat
+    A 2   Input:  audio bytes
+    A 3   Input:  snorkel
+    A 4   Output: stepper step
+    A 5   Output: stepper direction
+*/
+
+// Inputs
 #define HEADLIGHT_INPUT A0
 #define TRICK_OR_TREAT_INPUT A1
 #define SOUND_BYTE_INPUT A2
 #define SNORKEL_INPUT A3
 
+// Outputs
 #define HEADLIGHTS_OUTPUT 6
-#define FLASHERS_OUTPUT 6
+#define FLASHERS_OUTPUT 8
+#define HEADLIGHT_BRIGHTNESS 128
 
+// Stepper control/feedback
 #define SNORKEL_STEPPER_ENABLE 7
+#define SNORKEL_STEPPER_LIMIT 9
 #define SNORKEL_STEPPER_STEP A4
 #define SNORKEL_STEPPER_DIR A5
 
+// Convenience macros
 #define BUTTON_COUNT sizeof(buttons) / sizeof(Button)
 #define SOUND_COUNT sizeof(sounds) / sizeof(char*)
 #define TASK_COUNT sizeof(tasks) / sizeof(Task*)
-
-int headlightBrightness = 128;
 
 int currentSoundIndex = -1;
 char* sounds[] = {"FIRE-01.WAV", "BARK-01.WAV", "TIRE-01.WAV"};
 
 Audio audio;
 LightFlasher flasher(FLASHERS_OUTPUT);
-SnorkelSwiveler snorkel(SNORKEL_STEPPER_ENABLE, SNORKEL_STEPPER_STEP, SNORKEL_STEPPER_DIR);
+SnorkelSwiveler snorkel(SNORKEL_STEPPER_ENABLE, SNORKEL_STEPPER_STEP, SNORKEL_STEPPER_DIR, SNORKEL_STEPPER_LIMIT);
 
 Task* tasks[] = { &flasher, &snorkel };
 
@@ -37,13 +65,12 @@ typedef struct {
 
 
 void enableLights(){
-  analogWrite(HEADLIGHTS_OUTPUT, headlightBrightness);
+  analogWrite(HEADLIGHTS_OUTPUT, HEADLIGHT_BRIGHTNESS);
 }
 
 void disableLights(){
   digitalWrite(HEADLIGHTS_OUTPUT, 0);
 }
-
 
 void treakOrTreat(){
   audio.play("T-OR-T.WAV");

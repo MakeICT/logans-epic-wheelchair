@@ -32,8 +32,13 @@ class LightFlasher: public Task{
     boolean blink = false;
     
   public:
-    LightFlasher(int pin){
+    /**
+     * controlBlink:  when true, task will enable/disable pin periodically.
+     *                When false, task will enable pin, hold, disable pin, then quit.
+     **/
+    LightFlasher(int pin, boolean controlBlink){
       this->pin = pin;
+      this->blink = controlBlink;
     }
 
     void start(){
@@ -65,10 +70,12 @@ class LightFlasher: public Task{
 
 class SnorkelSwiveler: public Task{
   private:
-    long timeBucket = 0l;
     int enablePin;
     int stepPin;
     int dirPin;
+    int limitPin;
+    int direction;
+    int limitStatus;
     
     long period = 1000l;
 
@@ -82,10 +89,11 @@ class SnorkelSwiveler: public Task{
     }
     
   public:
-    SnorkelSwiveler(int enablePin, int stepPin, int dirPin){
+    SnorkelSwiveler(int enablePin, int stepPin, int dirPin, int limitPin){
       this->enablePin = enablePin;
       this->stepPin = stepPin;
-      this->dirPin = dirPin;
+      this->dirPin = dirPin;      
+      this->limitPin = limitPin;
       
       pinMode(this->enablePin, OUTPUT);
       digitalWrite(this->enablePin, HIGH);
@@ -95,22 +103,34 @@ class SnorkelSwiveler: public Task{
       pinMode(this->enablePin, OUTPUT);
       pinMode(this->stepPin, OUTPUT);
       pinMode(this->dirPin, OUTPUT);
+      pinMode(this->limitPin, INPUT_PULLUP);
 
       digitalWrite(this->enablePin, LOW);
-      timeBucket = 0l;      
+      direction = 0;
       Task::start();
     }
     
     void update(long elapsedTime){
-      timeBucket += elapsedTime;
+      bool lastLimitStatus = this->limitStatus;
 
-      if(timeBucket < period || (timeBucket > period*3 && timeBucket < period*4)){
+      this->limitStatus = digitalRead(this->limitPin);      
+      if(limitStatus != lastLimitStatus){
+        if(limitStatus){
+          direction++;
+        }
+      }
+
+      if(direction == 0){
         this->step(HIGH);
-      }else if(timeBucket < period*3){
+      }else if(direction == 1){
         this->step(LOW);
       }else{
-        digitalWrite(this->enablePin, HIGH);
-        this->state = DONE;
+        if(limitStatus){
+          this->step(HIGH);
+        }else{
+          digitalWrite(this->enablePin, HIGH);
+          this->state = DONE;        
+        }
       }
     }
 };

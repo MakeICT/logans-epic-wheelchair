@@ -71,42 +71,54 @@ class LightFlasher: public Task{
 class SnorkelSwiveler: public Task{
   private:
     int enablePin;
+    int bubblePin;
     int stepPin;
     int dirPin;
     int limitPin;
     int direction;
     int limitStatus;
     
+    int maxSteps = 150;
+    int stepCount = 0;
+    
     long period = 1000l;
 
     void step(boolean direction){
       digitalWrite(dirPin, direction);
       
-      digitalWrite(stepPin,HIGH); 
-      delayMicroseconds(500); 
+      digitalWrite(stepPin,HIGH);
+      delayMicroseconds(5000); 
       digitalWrite(stepPin,LOW); 
-      delayMicroseconds(500);
+      delayMicroseconds(5000);
     }
     
   public:
-    SnorkelSwiveler(int enablePin, int stepPin, int dirPin, int limitPin){
+    SnorkelSwiveler(int bubblePin, int enablePin, int stepPin, int dirPin, int limitPin){
+      this->bubblePin = bubblePin;
       this->enablePin = enablePin;
       this->stepPin = stepPin;
       this->dirPin = dirPin;      
       this->limitPin = limitPin;
       
+      pinMode(this->bubblePin, OUTPUT);
       pinMode(this->enablePin, OUTPUT);
+
+      digitalWrite(this->bubblePin, LOW);
       digitalWrite(this->enablePin, HIGH);
     }
 
     void start(){
+      pinMode(this->bubblePin, OUTPUT);
       pinMode(this->enablePin, OUTPUT);
       pinMode(this->stepPin, OUTPUT);
       pinMode(this->dirPin, OUTPUT);
       pinMode(this->limitPin, INPUT_PULLUP);
 
+      digitalWrite(this->bubblePin, HIGH);
       digitalWrite(this->enablePin, LOW);
-      direction = 0;
+      
+      this->direction = 0;
+      this->stepCount = 0;
       Task::start();
     }
     
@@ -114,23 +126,24 @@ class SnorkelSwiveler: public Task{
       bool lastLimitStatus = this->limitStatus;
 
       this->limitStatus = digitalRead(this->limitPin);      
-      if(limitStatus != lastLimitStatus){
-        if(limitStatus){
-          direction++;
-        }
+      bool stateChange = (limitStatus && !lastLimitStatus) || (this->stepCount >= this->maxSteps);
+      if(stateChange){
+        this->direction++;
+        this->stepCount = 0;
       }
 
-      if(direction == 0){
+      this->stepCount++;
+      if(this->direction == 0 || this->direction == 2){
         this->step(HIGH);
-      }else if(direction == 1){
+      }else if(this->direction == 1 || this->direction == 3){
         this->step(LOW);
       }else{
-        if(limitStatus){
+        for(int i=0; i<20; i++){
           this->step(HIGH);
-        }else{
-          digitalWrite(this->enablePin, HIGH);
-          this->state = DONE;        
         }
+        digitalWrite(this->bubblePin, LOW);
+        digitalWrite(this->enablePin, HIGH);
+        this->state = DONE;        
       }
     }
 };

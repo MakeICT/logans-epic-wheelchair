@@ -1,4 +1,4 @@
-const int enPin = 6;
+const int enPin = 1;
 const int dirPin = A5;
 const int stepPin = A4; 
  
@@ -15,28 +15,28 @@ void loop() {
   digitalWrite(enPin, LOW);
   digitalWrite(dirPin,HIGH); // Enables the motor to move in a particular direction
   // Makes 200 pulses for making one full cycle rotation
-  for(int x = 0; x < 800; x++) {
+  for(int x = 0; x < 200; x++) {
     digitalWrite(stepPin,HIGH); 
-    delayMicroseconds(500); 
+    delayMicroseconds(1000); 
     digitalWrite(stepPin,LOW); 
-    delayMicroseconds(500); 
+    delayMicroseconds(1000); 
   }
   
   digitalWrite(enPin, HIGH);
   Serial.println("STOP");
-  delay(1000); // One second delay
+  delay(2000); // One second delay
   Serial.println("SPIN TWO");
   
   digitalWrite(enPin, LOW);
   digitalWrite(dirPin,LOW); //Changes the rotations direction
   // Makes 400 pulses for making two full cycle rotation
-  for(int x = 0; x < 400; x++) {
+  for(int x = 0; x < 200; x++) {
     digitalWrite(stepPin,HIGH);
-    delayMicroseconds(500);
+    delayMicroseconds(1000);
     digitalWrite(stepPin,LOW);
-    delayMicroseconds(500);
+    delayMicroseconds(1000);
   }
   digitalWrite(enPin, HIGH);
   Serial.println("STOP");
-  delay(1000);
+  delay(2000);
 }

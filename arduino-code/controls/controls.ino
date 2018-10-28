@@ -2,14 +2,14 @@
 #include "task.h"
 
 /* Pin assignment guide
-    D 0   Serial
-    D 1   Serial
+    D 0   NOP
+    D 1   Output: stepper enable
     D 2   Audio shield (DAC)
     D 3   Audio shield (DAC)
     D 4   Audio shield (DAC)
     D 5   Audio shield (DAC)
     D 6~  Output: headlights and side lights
-    D 7   Output: stepper enable
+    D 7   Output: bubble DC motor
     D 8   Output: flashing lights
     D 9   Input: snorkel limit
     D10   Audio shield (SD)
@@ -35,9 +35,10 @@
 #define HEADLIGHTS_OUTPUT 6
 #define FLASHERS_OUTPUT 8
 #define HEADLIGHT_BRIGHTNESS 128
+#define BUBBLE_OUTPUT 7
 
 // Stepper control/feedback
-#define SNORKEL_STEPPER_ENABLE 7
+#define SNORKEL_STEPPER_ENABLE 1
 #define SNORKEL_STEPPER_LIMIT 9
 #define SNORKEL_STEPPER_STEP A4
 #define SNORKEL_STEPPER_DIR A5
@@ -51,8 +52,8 @@ int currentSoundIndex = -1;
 char* sounds[] = {"FIRE-01.WAV", "BARK-01.WAV", "TIRE-01.WAV"};
 
 Audio audio;
-LightFlasher flasher(FLASHERS_OUTPUT);
-SnorkelSwiveler snorkel(SNORKEL_STEPPER_ENABLE, SNORKEL_STEPPER_STEP, SNORKEL_STEPPER_DIR, SNORKEL_STEPPER_LIMIT);
+LightFlasher flasher(FLASHERS_OUTPUT, false);
+SnorkelSwiveler snorkel(BUBBLE_OUTPUT, SNORKEL_STEPPER_ENABLE, SNORKEL_STEPPER_STEP, SNORKEL_STEPPER_DIR, SNORKEL_STEPPER_LIMIT);
 
 Task* tasks[] = { &flasher, &snorkel };
 
@@ -106,8 +107,7 @@ Button buttons[] = {
 };
 
 void setup() {
-  Serial.begin(9600);
-  
+//  Serial.begin(9600);  
   for(int i=0; i<BUTTON_COUNT; i++){
     pinMode(buttons[i].pin, INPUT_PULLUP);
   }

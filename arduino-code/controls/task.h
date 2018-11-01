@@ -87,9 +87,10 @@ class SnorkelSwiveler: public Task{
       digitalWrite(dirPin, direction);
       
       digitalWrite(stepPin,HIGH);
-      delayMicroseconds(5000); 
+      delayMicroseconds(10000); 
       digitalWrite(stepPin,LOW); 
-      delayMicroseconds(5000);
+      delayMicroseconds(10000);
+      this->stepCount++;
     }
     
   public:
@@ -119,6 +120,7 @@ class SnorkelSwiveler: public Task{
       
       this->direction = 0;
       this->stepCount = 0;
+      this->limitStatus = HIGH;
       Task::start();
     }
     
@@ -126,21 +128,25 @@ class SnorkelSwiveler: public Task{
       bool lastLimitStatus = this->limitStatus;
 
       this->limitStatus = digitalRead(this->limitPin);      
-      bool stateChange = (limitStatus && !lastLimitStatus) || (this->stepCount >= this->maxSteps);
+      bool stateChange = ((limitStatus == LOW) && (lastLimitStatus == HIGH)) || (this->stepCount >= this->maxSteps);
       if(stateChange){
         this->direction++;
         this->stepCount = 0;
+        for(int i=0; i<10; i++){
+          this->step((this->direction % 2) + 1);
+        }
       }
 
-      this->stepCount++;
       if(this->direction == 0 || this->direction == 2){
         this->step(HIGH);
       }else if(this->direction == 1 || this->direction == 3){
         this->step(LOW);
       }else{
+        /*
         for(int i=0; i<20; i++){
           this->step(HIGH);
         }
+        */
         digitalWrite(this->bubblePin, LOW);
         digitalWrite(this->enablePin, HIGH);
         this->state = DONE;        

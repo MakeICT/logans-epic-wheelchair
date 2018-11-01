@@ -34,7 +34,7 @@
 // Outputs
 #define HEADLIGHTS_OUTPUT 6
 #define FLASHERS_OUTPUT 8
-#define HEADLIGHT_BRIGHTNESS 128
+#define HEADLIGHT_BRIGHTNESS 255
 #define BUBBLE_OUTPUT 7
 
 // Stepper control/feedback
@@ -116,6 +116,7 @@ void setup() {
   pinMode(FLASHERS_OUTPUT, OUTPUT);
   
   audio.setup();
+  treakOrTreat();
 }
 
 void loop() { 
